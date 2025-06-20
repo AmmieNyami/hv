@@ -1,0 +1,85 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>hv</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="icon" href="favicon.png" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body id="body">
+    <div id="topBar">
+      <span id="usernameDisplay"></span>
+      <button id="logoutButton">Logout</button>
+    </div>
+
+    <div class="mainContent">
+      <input id="searchField" class="searchElements" type="search" />
+      <div class="searchElements">
+        <div class="tagSetControls">
+          <select id="tagSetSelector"></select>
+          <button id="addNewTagSet">+</button>
+          <button id="removeTagSet">-</button>
+          <button id="updateTagSet">Update tag set</button>
+        </div>
+
+        <div>
+          <span>Tags: </span><button id="addTagButton">+</button>
+          <span id="tagSelector">
+            <div class="tagSelector">
+              <input
+                type="text"
+                name="tagSelectorSearch"
+                class="tagSelectorSearch"
+                placeholder="Search..."
+              />
+              <div class="tagSelectorList"></div>
+            </div>
+            <span class="tagList"></span>
+          </span>
+        </div>
+
+        <div>
+          <span>Anti-tags: </span>
+          <button id="addAntiTagButton">+</button>
+          <span id="antiTagSelector">
+            <div class="tagSelector">
+              <input
+                type="text"
+                name="tagSelectorSearch"
+                class="tagSelectorSearch"
+                placeholder="Search..."
+              />
+              <div class="tagSelectorList"></div>
+            </div>
+            <span class="tagList"></span>
+          </span>
+        </div>
+      </div>
+
+      <div id="searchResults"></div>
+
+      <div
+        style="padding-bottom: 10px; padding-top: 10px"
+        id="pageSelector"
+      ></div>
+    </div>
+
+    <script src="index.js" type="module"></script>
+    <script>
+      function debug_reloadCss() {
+        const head = document.querySelector("head");
+
+        const oldLink = head.querySelector('link[rel="stylesheet"]');
+        oldLink.remove();
+
+        const newLink = document.createElement("link");
+        newLink.rel = "stylesheet";
+        newLink.href = "style.css";
+        head.appendChild(newLink);
+      }
+    </script>
+  </body>
+</html>

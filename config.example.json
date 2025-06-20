@@ -1,0 +1,22 @@
+{
+  // Address where the client is being served.
+  "frontend_url": "http://localhost:1313",
+
+  // Database path.
+  // Is relative to either the path of the executable
+  // or the current working directory.
+  // Does NOT get created automatically. Before running
+  // the server, make sure to create an empty file in
+  // this path relative to either the working directory
+  // of the executable or the folder where the executable
+  // is located.
+  "database_path": "./database.db",
+
+  // Port where the server will run.
+  "port": 6969,
+
+  // Whether to allow the registering of accounts via
+  // `/api/v1/register` or not. Accounts can still be created
+  // via `hv manage register-user <USERNAME> <PASSWORD>`.
+  "disable_registering": false
+}

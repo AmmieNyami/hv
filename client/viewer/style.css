@@ -1,0 +1,21 @@
+body {
+  margin: 0px;
+}
+
+@media (min-aspect-ratio: 16/9) {
+  #pageImage {
+    position: absolute;
+    height: 100%;
+    left: 50%;
+    transform: translate(-50%, 0%);
+  }
+}
+
+@media not (min-aspect-ratio: 16/9) {
+  #pageImage {
+    position: absolute;
+    width: 100%;
+    top: 50%;
+    transform: translate(0%, -50%);
+  }
+}

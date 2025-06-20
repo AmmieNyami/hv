@@ -1,0 +1,17 @@
+{
+  // API URL.
+  // Because the server stores credentials in cookies,
+  // and due to the way cookies work, the frontend must
+  // also be accessed via this URL. This can be done
+  // by setting the `"frontend_url"` setting in the
+  // server's configuration file to the URL of the
+  // frontend. This way, when you access the API URL, the
+  // the server is gonna redirect requests to the frontend.
+  "api_url": "http://localhost:6969",
+
+  // Whether to enable safe mode or not. Safe mode makes
+  // calls to `/api/v1/page` always return an image
+  // showing the page's ID and a message saying
+  // "Safe mode enabled".
+  "safe_mode": false
+}
