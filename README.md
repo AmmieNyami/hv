@@ -51,3 +51,13 @@ $ python -m http.server 1313
 With everything running, you can open the client by going to the address specified the `"api_url"` field of the client's configuration file (`./client/config.json`) in a browser.
 
 This is not too different from a proper setup, where you would use an actual HTTP server.
+
+## Building a Linux Binary for Distribution
+
+To build a Linux binary that can work in any distribution without installing dependencies (i.e. static linking), you can install [musl](https://musl.libc.org/) in your system and run [the provided build script](./build-dist.sh) like so:
+
+```console
+$ ./build-dist.sh
+```
+
+This will produce a binary at `./hv`.
