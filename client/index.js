@@ -2,7 +2,8 @@ import { TagSelector } from "./tagSelector.js";
 import { TagSetManager } from "./tagSetManager.js";
 import * as api from "./api.js";
 
-const config = await fetch("/config.json").then((res) => res.json());
+import { loadJson } from "./loadJson.js"
+const config = await loadJson("/config.json");
 
 function setupAddTagButton(button, tagSelector) {
   button.onclick = (e) => {

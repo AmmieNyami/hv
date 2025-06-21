@@ -1,6 +1,7 @@
 import { error } from "./error.js";
 
-const config = await fetch("/config.json").then((res) => res.json());
+import { loadJson } from "./loadJson.js"
+const config = await loadJson("/config.json");
 
 function makeSafeModeImage(width, height, pageId) {
   const canvas = document.createElement("canvas");
