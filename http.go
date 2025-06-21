@@ -13,7 +13,7 @@ type Response struct {
 	Data        any    `json:"data"`
 }
 
-func writeResponseHttp(response Response, code int, w http.ResponseWriter) {
+func WriteResponseHttp(response Response, code int, w http.ResponseWriter) {
 	jsonBytes, _ := json.Marshal(response)
 	json := string(jsonBytes)
 
@@ -25,7 +25,7 @@ func writeResponseHttp(response Response, code int, w http.ResponseWriter) {
 	fmt.Fprintln(w, json)
 }
 
-func method(f http.HandlerFunc, acceptsMethods ...string) http.HandlerFunc {
+func Method(f http.HandlerFunc, acceptsMethods ...string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 
@@ -54,7 +54,7 @@ func method(f http.HandlerFunc, acceptsMethods ...string) http.HandlerFunc {
 
 		if !slices.Contains(acceptsMethods, r.Method) {
 			w.Header().Set("Allow", allowedMethodsString)
-			writeResponseHttp(Response{
+			WriteResponseHttp(Response{
 				ErrorCode:   -1,
 				ErrorString: "Invalid method",
 				Data:        nil,

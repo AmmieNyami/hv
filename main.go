@@ -57,14 +57,14 @@ func errorToHttpError(w http.ResponseWriter, err error) {
 		}
 	}
 
-	writeResponseHttp(response, http.StatusInternalServerError, w)
+	WriteResponseHttp(response, http.StatusInternalServerError, w)
 	return
 }
 
 func decodeJson(in io.Reader, out any, w http.ResponseWriter) (succeeded bool) {
 	err := json.NewDecoder(in).Decode(out)
 	if err != nil {
-		writeResponseHttp(Response{
+		WriteResponseHttp(Response{
 			ErrorCode:   -1,
 			ErrorString: "Invalid input",
 			Data:        nil,
@@ -98,7 +98,7 @@ type RegisterUserRequest struct {
 func registerUser(db *Database, serverConfig ServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if serverConfig.DisableRegistering {
-			writeResponseHttp(Response{
+			WriteResponseHttp(Response{
 				ErrorCode:   -1,
 				ErrorString: "User registering is disabled",
 				Data:        nil,
@@ -117,7 +117,7 @@ func registerUser(db *Database, serverConfig ServerConfig) http.HandlerFunc {
 			return
 		}
 
-		writeResponseHttp(Response{
+		WriteResponseHttp(Response{
 			ErrorCode:   0,
 			ErrorString: "OK",
 			Data:        nil,
@@ -161,7 +161,7 @@ func loginUser(db *Database) http.HandlerFunc {
 			SameSite: http.SameSiteLaxMode,
 		})
 
-		writeResponseHttp(Response{
+		WriteResponseHttp(Response{
 			ErrorCode:   0,
 			ErrorString: "OK",
 			Data:        nil,
@@ -179,7 +179,7 @@ func logoutUser(db *Database) http.HandlerFunc {
 			return
 		}
 
-		writeResponseHttp(Response{
+		WriteResponseHttp(Response{
 			ErrorCode:   0,
 			ErrorString: "OK",
 			Data:        nil,
@@ -201,7 +201,7 @@ func needsLogin(db *Database) http.HandlerFunc {
 			return
 		}
 
-		writeResponseHttp(Response{
+		WriteResponseHttp(Response{
 			ErrorCode:   0,
 			ErrorString: "OK",
 			Data: NeedsLoginResponse{
@@ -225,7 +225,7 @@ func getUsername(db *Database) http.HandlerFunc {
 			return
 		}
 
-		writeResponseHttp(Response{
+		WriteResponseHttp(Response{
 			ErrorCode:   0,
 			ErrorString: "OK",
 			Data: GetUsernameResponse{
@@ -266,7 +266,7 @@ func searchDoujins(db *Database) http.HandlerFunc {
 			return
 		}
 
-		writeResponseHttp(Response{
+		WriteResponseHttp(Response{
 			ErrorCode:   0,
 			ErrorString: "OK",
 			Data: SearchDoujinsResponse{
@@ -299,7 +299,7 @@ func getDoujin(db *Database) http.HandlerFunc {
 			return
 		}
 
-		writeResponseHttp(Response{
+		WriteResponseHttp(Response{
 			ErrorCode:   0,
 			ErrorString: "OK",
 			Data: GetDoujinResponse{
@@ -376,7 +376,7 @@ func getTags(db *Database) http.HandlerFunc {
 			return
 		}
 
-		writeResponseHttp(Response{
+		WriteResponseHttp(Response{
 			ErrorCode:   0,
 			ErrorString: "OK",
 			Data: GetTagsResponse{
@@ -410,7 +410,7 @@ func createTagSet(db *Database) http.HandlerFunc {
 			return
 		}
 
-		writeResponseHttp(Response{
+		WriteResponseHttp(Response{
 			ErrorCode:   0,
 			ErrorString: "OK",
 			Data: CreateTagSetResponse{
@@ -439,7 +439,7 @@ func deleteTagSet(db *Database) http.HandlerFunc {
 			return
 		}
 
-		writeResponseHttp(Response{
+		WriteResponseHttp(Response{
 			ErrorCode:   0,
 			ErrorString: "OK",
 			Data:        nil,
@@ -468,7 +468,7 @@ func changeTagSet(db *Database) http.HandlerFunc {
 			return
 		}
 
-		writeResponseHttp(Response{
+		WriteResponseHttp(Response{
 			ErrorCode:   0,
 			ErrorString: "OK",
 			Data:        nil,
@@ -490,7 +490,7 @@ func getTagSets(db *Database) http.HandlerFunc {
 			return
 		}
 
-		writeResponseHttp(Response{
+		WriteResponseHttp(Response{
 			ErrorCode:   0,
 			ErrorString: "OK",
 			Data: GetTagSetsResponse{
@@ -546,15 +546,14 @@ func LoadServerConfig() ServerConfig {
 
 	// Load server config
 	serverConfigFilePath := findFile("config.json")
-	serverConfigFile, err := os.Open(serverConfigFilePath)
+	serverConfigFile, err := os.ReadFile(serverConfigFilePath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: failed to open file `%s`: %v\n", serverConfigFilePath, err)
 		os.Exit(1)
 	}
-	defer serverConfigFile.Close()
 
 	var serverConfig ServerConfig
-	err = json.NewDecoder(serverConfigFile).Decode(&serverConfig)
+	err = UnmarshalJsonWithComments(string(serverConfigFile), &serverConfig)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: failed to decode JSON file `%s`: %v\n", serverConfigFilePath, err)
 		os.Exit(1)
@@ -591,24 +590,24 @@ func startServer(serverConfig ServerConfig) {
 	defer db.Close()
 
 	// Authentication
-	http.HandleFunc("/api/v1/register", method(registerUser(db, serverConfig), "POST"))
-	http.HandleFunc("/api/v1/login", method(loginUser(db), "POST"))
-	http.HandleFunc("/api/v1/needsLogin", method(needsLogin(db), "POST"))
-	http.HandleFunc("/api/v1/logout", method(logoutUser(db), "POST"))
+	http.HandleFunc("/api/v1/register", Method(registerUser(db, serverConfig), "POST"))
+	http.HandleFunc("/api/v1/login", Method(loginUser(db), "POST"))
+	http.HandleFunc("/api/v1/needsLogin", Method(needsLogin(db), "POST"))
+	http.HandleFunc("/api/v1/logout", Method(logoutUser(db), "POST"))
 
 	// Doujins
-	http.HandleFunc("/api/v1/search", method(searchDoujins(db), "POST"))
-	http.HandleFunc("/api/v1/doujin", method(getDoujin(db), "POST"))
-	http.HandleFunc("/api/v1/page", method(getPage(db), "POST"))
+	http.HandleFunc("/api/v1/search", Method(searchDoujins(db), "POST"))
+	http.HandleFunc("/api/v1/doujin", Method(getDoujin(db), "POST"))
+	http.HandleFunc("/api/v1/page", Method(getPage(db), "POST"))
 
 	// Tags
-	http.HandleFunc("/api/v1/tags", method(getTags(db), "POST"))
-	http.HandleFunc("/api/v1/createTagSet", method(createTagSet(db), "POST"))
-	http.HandleFunc("/api/v1/deleteTagSet", method(deleteTagSet(db), "POST"))
-	http.HandleFunc("/api/v1/changeTagSet", method(changeTagSet(db), "POST"))
-	http.HandleFunc("/api/v1/getTagSets", method(getTagSets(db), "POST"))
+	http.HandleFunc("/api/v1/tags", Method(getTags(db), "POST"))
+	http.HandleFunc("/api/v1/createTagSet", Method(createTagSet(db), "POST"))
+	http.HandleFunc("/api/v1/deleteTagSet", Method(deleteTagSet(db), "POST"))
+	http.HandleFunc("/api/v1/changeTagSet", Method(changeTagSet(db), "POST"))
+	http.HandleFunc("/api/v1/getTagSets", Method(getTagSets(db), "POST"))
 
-	http.HandleFunc("/api/v1/getUsername", method(getUsername(db), "POST"))
+	http.HandleFunc("/api/v1/getUsername", Method(getUsername(db), "POST"))
 
 	// Handle unknown endpoints
 	http.HandleFunc("/", unknownEndpointHandler(serverConfig.FrontendURL))
