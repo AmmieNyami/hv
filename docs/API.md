@@ -121,8 +121,8 @@ Request format:
 Where:
 
 - `"query"` is the search search query. The server will only return results that contain this query in the title or subtitle;
-- `"page_size"` is the size of a page of search results. Must be a number between 1 and 100 inclusive. The page size indicates the number of search results the server should return, and multiplying the page size by the page number results in the number of search results the server should skip;
-- `"page_number"` is the number of the page of search results that the server should return. Must be greater than 0. Multiplying the page number by the page size results in the number of search results that the server should skip;
+- `"page_size"` is the size of a page of search results. Must be a number between 1 and 100 inclusive. The page size indicates the number of search results the server should return, and multiplying the page size by the page number minus one results in the number of search results the server should skip;
+- `"page_number"` is the number of the page of search results that the server should return. Must be greater than 0. Multiplying the page number minus one by the page size results in the number of search results that the server should skip;
 - `"tags"` is an array of tags. The server will only return search results that contain the specified tags;
 - `"anti_tags"` is an array of tags. The server will only return search results that do NOT contain these tags.
 
