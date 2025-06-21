@@ -54,7 +54,7 @@ This is not too different from a proper setup, where you would use an actual HTT
 
 ## Building a Linux Binary for Distribution
 
-To build a Linux binary that can work in any distribution without installing dependencies (i.e. static linking), you can install [musl](https://musl.libc.org/) in your system and run [the provided build script](./build-dist.sh) like so:
+To build a Linux binary that can work in any distribution without installing dependencies (i.e. static linking), you can install [musl](https://musl.libc.org/) and its tools (like `musl-gcc`) in your system and run [the provided build script](./build-dist.sh) like so:
 
 ```console
 $ ./build-dist.sh
