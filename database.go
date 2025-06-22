@@ -442,7 +442,7 @@ func (db *Database) authenticateUser(username string, token string) (int, error)
 	return userId, nil
 }
 
-func (db *Database) RegisterDoujin(folderPath string) error {
+func (db *Database) ImportDoujin(folderPath string) error {
 	filePath := path.Join(folderPath, "metadata.json")
 	file, err := os.Open(filePath)
 	if err != nil {

@@ -655,7 +655,7 @@ func main() {
 			}
 			defer db.Close()
 
-			err = db.RegisterDoujin(directory)
+			err = db.ImportDoujin(directory)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "ERROR: failed to register doujin in folder `%s`: %v\n", directory, err)
 				os.Exit(1)
@@ -690,7 +690,7 @@ func main() {
 				}
 
 				doujinPath := path.Join(directory, e.Name())
-				err = db.RegisterDoujin(doujinPath)
+				err = db.ImportDoujin(doujinPath)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "ERROR: failed to register doujin in folder `%s`: %v\n", doujinPath, err)
 					os.Exit(1)
