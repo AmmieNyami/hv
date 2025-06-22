@@ -528,10 +528,18 @@ type ServerConfig struct {
 
 func LoadServerConfig() ServerConfig {
 	findFile := func(file string) string {
-		exeDirectory, _ := exeDirectory()
-		workDirectory, _ := os.Getwd()
+		if file[0] == '/' {
+			if _, err := os.Stat(file); os.IsNotExist(err) {
+				fmt.Fprintf(os.Stderr, "ERROR: cound not find file `%s`\n", file)
+				os.Exit(1)
+			}
+			return file
+		}
 
-		for _, directory := range []string{workDirectory, exeDirectory} {
+		exeDirectory, _ := exeDirectory()
+		workingDirectory, _ := os.Getwd()
+
+		for _, directory := range []string{workingDirectory, exeDirectory} {
 			path := path.Join(directory, file)
 			if _, err := os.Stat(path); os.IsNotExist(err) {
 				continue

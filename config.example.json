@@ -3,13 +3,17 @@
   "frontend_url": "http://localhost:1313",
 
   // Database path.
-  // Is relative to either the path of the executable
-  // or the current working directory.
+  // Can be absolute or relative to the current working
+  // directory or the directory where the executable is
+  // located.
   // Does NOT get created automatically. Before running
-  // the server, make sure to create an empty file in
-  // this path relative to either the working directory
-  // of the executable or the folder where the executable
-  // is located.
+  // the server, you should create an empty file at the
+  // location specified. If the location is absolute,
+  // you should create the file at the location specified,
+  // and if the location is relative, you should create
+  // the file at the location specified relative to the
+  // current working directory or the directory where the
+  // executable is located.
   "database_path": "./database.db",
 
   // Port where the server will run.
