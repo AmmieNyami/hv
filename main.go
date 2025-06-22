@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
 	"time"
 )
@@ -34,11 +35,12 @@ func errorToHttpError(w http.ResponseWriter, err error) {
 
 	pc, file, line, ok := runtime.Caller(1)
 	if ok {
+		file = filepath.Base(file)
 		callerFunc := runtime.FuncForPC(pc)
-		caller = fmt.Sprintf("%s:%d: %s:", file, line, callerFunc.Name())
+		caller = fmt.Sprintf("%s:%d: %s: ", file, line, callerFunc.Name())
 	}
 
-	log.Printf("%s %v\n", caller, err)
+	log.Printf("%s%v\n", caller, err)
 
 	var response Response
 
@@ -714,7 +716,9 @@ func main() {
 				os.Exit(1)
 			}
 
-			db, err := NewDatabase(LoadServerConfig())
+			serverConfig := LoadServerConfig()
+			serverConfig.DisableRegistering = false // in case the user enabled it
+			db, err := NewDatabase(serverConfig)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "ERROR: failed to create database: %v\n", err)
 				os.Exit(1)
