@@ -12,6 +12,7 @@ import (
 	"math"
 	"os"
 	"path"
+	"path/filepath"
 	"slices"
 	"sort"
 	"strconv"
@@ -463,8 +464,13 @@ func (db *Database) ImportDoujin(folderPath string) error {
 	languages := jsonEncode(doujinMeta.Languages)
 	uploadDate := doujinMeta.UploadDate.Format(time.RFC3339)
 
-	result, err := sqlExec(
-		db.db,
+	tx, err := db.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	result, err := tx.Exec(
 		`INSERT INTO Doujins (title, subtitle, upload_date, external_rating, tags, characters, artists, groups, languages, pages)
 		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		doujinMeta.Title, doujinMeta.Subtitle, uploadDate, doujinMeta.ExternalRating,
@@ -486,12 +492,6 @@ func (db *Database) ImportDoujin(folderPath string) error {
 
 	log.Printf("Importing doujin in folder `%s`\n", folderPath)
 
-	tx, err := db.db.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
 	importedPages := []int{}
 	for _, e := range entries {
 		pageNumber := pageNameToPageNumber(e.Name())
@@ -499,9 +499,14 @@ func (db *Database) ImportDoujin(folderPath string) error {
 			continue
 		}
 
+		pagePath, err := filepath.Abs(path.Join(folderPath, e.Name()))
+		if err != nil {
+			return err
+		}
+
 		_, err = tx.Exec(
 			"INSERT INTO DoujinPages (doujin_id, page_path, page_number) VALUES (?, ?, ?)",
-			doujinId, path.Join(folderPath, e.Name()), pageNumber,
+			doujinId, pagePath, pageNumber,
 		)
 		if err != nil {
 			return err
