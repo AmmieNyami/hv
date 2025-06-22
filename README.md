@@ -1,6 +1,6 @@
 # hv
 
-A doujin/manga manager.
+A doujin/manga manager and reader.
 
 ![](./assets/screenshot.png)
 
