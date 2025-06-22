@@ -95,17 +95,8 @@ type RegisterUserRequest struct {
 	Password string `json:"password"`
 }
 
-func registerUser(db *Database, serverConfig ServerConfig) http.HandlerFunc {
+func registerUser(db *Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if serverConfig.DisableRegistering {
-			WriteResponseHttp(Response{
-				ErrorCode:   -1,
-				ErrorString: "User registering is disabled",
-				Data:        nil,
-			}, http.StatusUnauthorized, w)
-			return
-		}
-
 		var newUser RegisterUserRequest
 		if !decodeJson(r.Body, &newUser, w) {
 			return
@@ -518,87 +509,15 @@ func unknownEndpointHandler(frontendURL string) http.HandlerFunc {
 	}
 }
 
-type ServerConfig struct {
-	FrontendURL  string `json:"frontend_url"`
-	DatabasePath string `json:"database_path"`
-	Port         int    `json:"port"`
-
-	DisableRegistering bool `json:"disable_registering"`
-}
-
-func LoadServerConfig() ServerConfig {
-	findFile := func(file string) string {
-		if file[0] == '/' {
-			if _, err := os.Stat(file); os.IsNotExist(err) {
-				fmt.Fprintf(os.Stderr, "ERROR: cound not find file `%s`\n", file)
-				os.Exit(1)
-			}
-			return file
-		}
-
-		exeDirectory, _ := exeDirectory()
-		workingDirectory, _ := os.Getwd()
-
-		for _, directory := range []string{workingDirectory, exeDirectory} {
-			path := path.Join(directory, file)
-			if _, err := os.Stat(path); os.IsNotExist(err) {
-				continue
-			}
-			return path
-		}
-
-		fmt.Fprintf(os.Stderr, "ERROR: cound not find file `%s`\n", file)
-		os.Exit(1)
-		panic("unreachable")
-	}
-
-	// Load server config
-	serverConfigFilePath := findFile("config.json")
-	serverConfigFile, err := os.ReadFile(serverConfigFilePath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: failed to open file `%s`: %v\n", serverConfigFilePath, err)
-		os.Exit(1)
-	}
-
-	var serverConfig ServerConfig
-	err = UnmarshalJsonWithComments(string(serverConfigFile), &serverConfig)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: failed to decode JSON file `%s`: %v\n", serverConfigFilePath, err)
-		os.Exit(1)
-	}
-
-	// Validate fields
-	if !isURLValid(serverConfig.FrontendURL) {
-		fmt.Fprintf(os.Stderr, "ERROR: invalid frontend URL specified in configuration file\n")
-		os.Exit(1)
-	}
-
-	databasePath := findFile(serverConfig.DatabasePath)
-
-	if serverConfig.Port == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: invalid port specified in configuration file\n")
-		os.Exit(1)
-	}
-
-	// Return validated struct
-	return ServerConfig{
-		FrontendURL:  serverConfig.FrontendURL,
-		DatabasePath: databasePath,
-		Port:         serverConfig.Port,
-
-		DisableRegistering: serverConfig.DisableRegistering,
-	}
-}
-
 func startServer(serverConfig ServerConfig) {
-	db, err := NewDatabase(serverConfig.DatabasePath)
+	db, err := NewDatabase(serverConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
 	// Authentication
-	http.HandleFunc("/api/v1/register", Method(registerUser(db, serverConfig), "POST"))
+	http.HandleFunc("/api/v1/register", Method(registerUser(db), "POST"))
 	http.HandleFunc("/api/v1/login", Method(loginUser(db), "POST"))
 	http.HandleFunc("/api/v1/needsLogin", Method(needsLogin(db), "POST"))
 	http.HandleFunc("/api/v1/logout", Method(logoutUser(db), "POST"))
@@ -729,7 +648,7 @@ func main() {
 				os.Exit(1)
 			}
 
-			db, err := NewDatabase(LoadServerConfig().DatabasePath)
+			db, err := NewDatabase(LoadServerConfig())
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "ERROR: failed to create database: %v\n", err)
 				os.Exit(1)
@@ -752,7 +671,7 @@ func main() {
 				os.Exit(1)
 			}
 
-			db, err := NewDatabase(LoadServerConfig().DatabasePath)
+			db, err := NewDatabase(LoadServerConfig())
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "ERROR: failed to create database: %v\n", err)
 				os.Exit(1)
@@ -795,7 +714,7 @@ func main() {
 				os.Exit(1)
 			}
 
-			db, err := NewDatabase(LoadServerConfig().DatabasePath)
+			db, err := NewDatabase(LoadServerConfig())
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "ERROR: failed to create database: %v\n", err)
 				os.Exit(1)

@@ -233,23 +233,25 @@ const (
 	DatabaseErrorInvalidId
 	DatabaseErrorUnauthorized
 	DatabaseErrorInvalidPageSize
+	DatabaseErrorRegisteringDisabled
 
 	DatabaseErrorCount
 )
 
 var databaseErrorMessages = []string{
-	DatabaseErrorInvalidMetadata:    "Invalid database metadata",
-	DatabaseErrorInvalidSchema:      "Invalid database schema",
-	DatabaseErrorExistentUser:       "User already exists in database",
-	DatabaseErrorInexistentUser:     "User does not exist in database",
-	DatabaseErrorInvalidPassword:    "Invalid password",
-	DatabaseErrorDisallowedUsername: "Disallowed username",
-	DatabaseErrorDisallowedPassword: "Disallowed password",
-	DatabaseErrorInvalidToken:       "Invalid token",
-	DatabaseErrorInvalidPageNumber:  "Invalid page number",
-	DatabaseErrorInvalidId:          "Invalid ID",
-	DatabaseErrorUnauthorized:       "Unauthorized",
-	DatabaseErrorInvalidPageSize:    "Invalid page size",
+	DatabaseErrorInvalidMetadata:     "Invalid database metadata",
+	DatabaseErrorInvalidSchema:       "Invalid database schema",
+	DatabaseErrorExistentUser:        "User already exists in database",
+	DatabaseErrorInexistentUser:      "User does not exist in database",
+	DatabaseErrorInvalidPassword:     "Invalid password",
+	DatabaseErrorDisallowedUsername:  "Disallowed username",
+	DatabaseErrorDisallowedPassword:  "Disallowed password",
+	DatabaseErrorInvalidToken:        "Invalid token",
+	DatabaseErrorInvalidPageNumber:   "Invalid page number",
+	DatabaseErrorInvalidId:           "Invalid ID",
+	DatabaseErrorUnauthorized:        "Unauthorized",
+	DatabaseErrorInvalidPageSize:     "Invalid page size",
+	DatabaseErrorRegisteringDisabled: "User registering is disabled",
 }
 
 func init() {
@@ -304,10 +306,11 @@ type TagSet struct {
 }
 
 type Database struct {
-	db *sql.DB
+	db           *sql.DB
+	serverConfig ServerConfig
 }
 
-func NewDatabase(databasePath string) (*Database, error) {
+func NewDatabase(serverConfig ServerConfig) (*Database, error) {
 	isDatabaseInitialized := func(db *sql.DB) (string, error) {
 		var appName string
 		var schemaVersion string
@@ -323,7 +326,7 @@ func NewDatabase(databasePath string) (*Database, error) {
 		return schemaVersion, nil
 	}
 
-	db, err := sql.Open("sqlite3", databasePath)
+	db, err := sql.Open("sqlite3", serverConfig.DatabasePath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -408,7 +411,7 @@ func NewDatabase(databasePath string) (*Database, error) {
 	}
 
 	errored = false
-	return &Database{db}, nil
+	return &Database{db, serverConfig}, nil
 }
 
 func (db *Database) authenticateUser(username string, token string) (int, error) {
@@ -531,6 +534,10 @@ func (db *Database) RegisterDoujin(folderPath string) error {
 }
 
 func (db *Database) RegisterUser(username string, password string) error {
+	if db.serverConfig.DisableRegistering {
+		return DatabaseErrorRegisteringDisabled
+	}
+
 	if !isUsernameValid(username) {
 		return DatabaseErrorDisallowedUsername
 	}
