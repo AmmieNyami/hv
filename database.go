@@ -61,14 +61,6 @@ func hashToken(token string, salt string) string {
 	return base64encode(bytes[:])
 }
 
-func sqlExec(db *sql.DB, query string, args ...any) (sql.Result, error) {
-	res, err := db.Exec(query, args...)
-	if err != nil {
-		return nil, fmt.Errorf("`%s`: %v", query, err)
-	}
-	return res, nil
-}
-
 func removeExtension(fileName string) string {
 	if ext := path.Ext(fileName); ext != "" {
 		return fileName[:len(fileName)-len(ext)]
@@ -344,19 +336,19 @@ func NewDatabase(serverConfig ServerConfig) (*Database, error) {
 		return nil, err
 	}
 
-	_, err = sqlExec(db, "PRAGMA foreign_keys = ON")
+	_, err = db.Exec("PRAGMA foreign_keys = ON")
 	if err != nil {
 		return nil, err
 	}
 
 	if schemaVersion == "" {
-		_, err = sqlExec(db, `CREATE TABLE "META" (app_name TEXT NOT NULL, schema_version TEXT NOT NULL);
-							  INSERT INTO "META" (app_name, schema_version) VALUES ("hv", "v1")`)
+		_, err = db.Exec(`CREATE TABLE "META" (app_name TEXT NOT NULL, schema_version TEXT NOT NULL);
+						  INSERT INTO "META" (app_name, schema_version) VALUES ("hv", "v1")`)
 		if err != nil {
 			return nil, err
 		}
 
-		_, err = sqlExec(db, `CREATE TABLE Users (
+		_, err = db.Exec(`CREATE TABLE Users (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			username TEXT NOT NULL,
 			password_hash TEXT NOT NULL,
@@ -367,7 +359,7 @@ func NewDatabase(serverConfig ServerConfig) (*Database, error) {
 			return nil, err
 		}
 
-		_, err = sqlExec(db, `CREATE TABLE Doujins (
+		_, err = db.Exec(`CREATE TABLE Doujins (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			title TEXT NOT NULL,
 			subtitle TEXT NOT NULL,
@@ -384,7 +376,7 @@ func NewDatabase(serverConfig ServerConfig) (*Database, error) {
 			return nil, err
 		}
 
-		_, err = sqlExec(db, `CREATE TABLE DoujinPages (
+		_, err = db.Exec(`CREATE TABLE DoujinPages (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			doujin_id INTEGER NOT NULL,
 			page_path TEXT NOT NULL,
@@ -396,7 +388,7 @@ func NewDatabase(serverConfig ServerConfig) (*Database, error) {
 			return nil, err
 		}
 
-		_, err = sqlExec(db, `CREATE TABLE TagSets (
+		_, err = db.Exec(`CREATE TABLE TagSets (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			user_id INTEGER NOT NULL,
 			tags TEXT NOT NULL,
@@ -563,8 +555,7 @@ func (db *Database) RegisterUser(username string, password string) error {
 	passwordSalt := randomString(PasswordSaltLength)
 	passwordHash := hashPassword(password, passwordSalt)
 
-	_, err = sqlExec(
-		db.db,
+	_, err = db.db.Exec(
 		"INSERT INTO Users (username, password_hash, password_salt, session_tokens) VALUES (?, ?, ?, ?)",
 		username, passwordHash, passwordSalt, "",
 	)
@@ -601,8 +592,7 @@ func (db *Database) LoginUser(username string, password string) (string, error) 
 		return "", err
 	}
 
-	_, err = sqlExec(
-		db.db,
+	_, err = db.db.Exec(
 		"UPDATE Users SET session_tokens = ? WHERE username = ? COLLATE NOCASE",
 		sessionTokens, username,
 	)
@@ -996,8 +986,7 @@ func (db *Database) CreateTagSet(username string, token string, tags []string, a
 	tagsJson := jsonEncode(tags)
 	antiTagsJson := jsonEncode(antiTags)
 
-	result, err := sqlExec(
-		db.db,
+	result, err := db.db.Exec(
 		`INSERT INTO TagSets (user_id, tags, anti_tags) VALUES (?, ?, ?)`,
 		userId, tagsJson, antiTagsJson,
 	)
@@ -1033,7 +1022,7 @@ func (db *Database) DeleteTagSet(username string, token string, tagSetId int) er
 		return DatabaseErrorUnauthorized
 	}
 
-	_, err = sqlExec(db.db, `DELETE FROM TagSets WHERE id = ?`, tagSetId)
+	_, err = db.db.Exec(`DELETE FROM TagSets WHERE id = ?`, tagSetId)
 	if err != nil {
 		return err
 	}
@@ -1064,8 +1053,7 @@ func (db *Database) ChangeTagSet(username string, token string, tagSetId int, ta
 	tagsJson := jsonEncode(tags)
 	antiTagsJson := jsonEncode(antiTags)
 
-	_, err = sqlExec(
-		db.db,
+	_, err = db.db.Exec(
 		`UPDATE TagSets SET tags = ?, anti_tags = ? WHERE id = ?`,
 		tagsJson, antiTagsJson, tagSetId,
 	)
@@ -1159,8 +1147,7 @@ func (db *Database) LogoutUser(username string, token string) error {
 		return err
 	}
 
-	_, err = sqlExec(
-		db.db,
+	_, err = db.db.Exec(
 		"UPDATE Users SET session_tokens = ? WHERE username = ? COLLATE NOCASE",
 		sessionTokens, username,
 	)
