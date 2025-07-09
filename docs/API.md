@@ -183,7 +183,7 @@ Where:
     - `"languages"` is an array containing the languages used in the doujin;
     - `"pages"` is an array containing an array containing the number of the first page of the doujin and its ID, respectively.
 
-- `"total_pages"` is the number of available pages for this search result, based on the page size specified in the request.
+- `"total_pages"` is the number of available pages for this search, based on the page size specified in the request.
 
 | Endpoint         | Method | Description                        |
 |------------------|--------|------------------------------------|
